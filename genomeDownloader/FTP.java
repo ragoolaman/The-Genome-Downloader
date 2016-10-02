@@ -63,7 +63,7 @@ public class FTP {
         String[] fileList = {"Genomic FNA","Protein FAA","Genomic GBFF"};
         for(String i : fileList) {
             try{
-                GZIPInputStream gzipInputStream = null;
+                GZIPInputStream gzipInputStream;
                 gzipInputStream = new GZIPInputStream(new FileInputStream(cwd + "\\" + genomeName + "\\" + i + ".gz"));
                 String outFilename = i + ".txt";
                 OutputStream out = new FileOutputStream(cwd + "\\" + genomeName + "\\" + outFilename);

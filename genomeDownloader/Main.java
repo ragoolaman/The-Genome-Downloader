@@ -36,6 +36,7 @@ public class Main extends Application{
     private String genomeListSel;
     private boolean containsQuote;
     static String directory;
+    private String genomeDownListComp;
 
     private void downGenomes() {
         //Declare location for JDBC Drivers, sql username and sql password
@@ -71,6 +72,9 @@ public class Main extends Application{
     }
     private void getSQLDesignation()
     {
+        sqlName.clear();
+        sqlCode.clear();
+        sqlStrain.clear();
         String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
         String username = "java";
         String password = "password";
@@ -82,7 +86,6 @@ public class Main extends Application{
                 sqlName.add((rs.getString(1)));
                 sqlStrain.add(rs.getString(2));
                 sqlCode.add(rs.getString(3) + "_" + rs.getString(4));
-                System.out.println(rs.getString(2));
             }
             connection.close();
             stmt.close();
@@ -95,6 +98,8 @@ public class Main extends Application{
     {
         System.out.println(genome);
         sqlName.clear();
+        sqlStrain.clear();
+        sqlCode.clear();
         String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
         String username = "java";
         String password = "password";
@@ -244,8 +249,31 @@ public class Main extends Application{
 
         //Add action listener to add the selected genome to the download queue
         add.setOnAction(ae -> {
-            if(!genomeList.contains(availListSel)) {
-                genomeList.add(availListSel);
+            //System.out.println("AvailListSel is" + availListSel);
+            String[] genomeArray = availListSel.split("\t");
+            //System.out.println("GenomeArray holds:" + genomeArray[0] + genomeArray[1]);
+            String[] finalGenomeArray = genomeArray[0].split(" ");
+            System.out.println(finalGenomeArray.length);
+            switch (finalGenomeArray.length)
+            {
+                case 1 :
+                    genomeDownListComp = finalGenomeArray[0];
+                    break;
+                case 2 :
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1];
+                    break;
+                case 3:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2];
+                    break;
+                case 4:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3];
+                    break;
+                case 5:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4];
+                    break;
+            }
+            if(!genomeList.contains(genomeDownListComp)) {
+                genomeList.add(genomeDownListComp);
             }
         });
         //Add the remove function for the download Queue
@@ -265,12 +293,7 @@ public class Main extends Application{
             getSQLDesignation();
             for(String i : sqlName)
             {
-                if(!sqlStrain.get(counter).contains("")){
-                    availableGenomes.add(i + "\tstrain= " + sqlCode.get(counter));
-                } else
-                {
-                    availableGenomes.add(i + "\tstrain undefined");
-                }
+                availableGenomes.add(i + "\tstrain= " + sqlStrain.get(counter));
                 counter++;
             }
             Collections.sort(availableGenomes);
@@ -311,12 +334,13 @@ public class Main extends Application{
             else containsQuote = false;
             sqlSearch(input.getText());
             availableGenomes.clear();
-            for(String i : sqlName)
-            {
-                availableGenomes.add(i);
-
-            }
-            Collections.sort(availableGenomes);
+            counter = 0;
+                for(String o : sqlName)
+                {
+                    availableGenomes.add(o + "\tstrain= " + sqlStrain.get(counter));
+                    counter++;
+                }
+                Collections.sort(availableGenomes);
         });
         //Add the download action, wherein the FTP Class is informed to Get the genomes in the download queue
         down.setOnAction(ae -> {
