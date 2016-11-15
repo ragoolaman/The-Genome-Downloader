@@ -10,32 +10,32 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main extends Application{
 
     //Initalize necessary variables
     private static int counter = 0;
     private ResultSet rs;
-    private TextField input,destination;
+    private TextField input;
     private List<String> sqlName = new ArrayList<>();
     private List<String> sqlCode = new ArrayList<>();
     private List<String> sqlStrain = new ArrayList<>();
     private ObservableList<String> genomeList = FXCollections.observableArrayList();
-    private Label updateText;
+    private Label updateText, downText;
     private Button downloadPane,update;
-    private Button add,down,remove,back;
+    private Button add,down,remove,back, destination;
     private String availListSel;
     private String genomeListSel;
     private boolean containsQuote;
-    static String directory;
+    private String genomeDownListComp;
+    public static String downDir;
 
     private void downGenomes() {
         //Declare location for JDBC Drivers, sql username and sql password
@@ -71,6 +71,9 @@ public class Main extends Application{
     }
     private void getSQLDesignation()
     {
+        sqlName.clear();
+        sqlCode.clear();
+        sqlStrain.clear();
         String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
         String username = "java";
         String password = "password";
@@ -80,9 +83,9 @@ public class Main extends Application{
             while(rs.next())
             {
                 sqlName.add((rs.getString(1)));
+                //System.out.println(rs.getString(1));
                 sqlStrain.add(rs.getString(2));
                 sqlCode.add(rs.getString(3) + "_" + rs.getString(4));
-                System.out.println(rs.getString(2));
             }
             connection.close();
             stmt.close();
@@ -95,6 +98,8 @@ public class Main extends Application{
     {
         System.out.println(genome);
         sqlName.clear();
+        sqlStrain.clear();
+        sqlCode.clear();
         String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
         String username = "java";
         String password = "password";
@@ -183,13 +188,6 @@ public class Main extends Application{
 
     public static void main(String[] args) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException, SQLException
     {
-        /*System.out.println("Starting FTP Update");
-        FTP.FTPUpdate();
-        System.out.println("Sarting processDataFile()");
-        processDataFile();
-        System.out.println("Starting populateSQL()");
-        populateSQL("C:\\Users\\John\\Documents\\sqlForJava.sql");
-        System.out.println("Done");*/
         launch(args);
     }
     @Override
@@ -222,12 +220,14 @@ public class Main extends Application{
         input = new TextField();
             input.setPromptText("Search for Genome by Name");
             input.setPrefColumnCount(15);
-            input.setTranslateX(-200);
+            input.setTranslateX(-150);
             input.setTranslateY(-640);
-        destination = new TextField();
-            destination.setPromptText("Enter directory pathway");
-            destination.setTranslateX(130);
+        destination = new Button("Select Download Location");
+            destination.setTranslateX(190);
             destination.setTranslateY(-290);
+        downText = new Label("Download Progress:");
+            downText.setTranslateX(200);
+            downText.setTranslateY(-290);
 
         //Create the List view that the Download genome view reads from
         ObservableList<String> availableGenomes = FXCollections.observableArrayList();
@@ -244,8 +244,31 @@ public class Main extends Application{
 
         //Add action listener to add the selected genome to the download queue
         add.setOnAction(ae -> {
-            if(!genomeList.contains(availListSel)) {
-                genomeList.add(availListSel);
+            //System.out.println("AvailListSel is" + availListSel);
+            String[] genomeArray = availListSel.split("\t");
+            //System.out.println("GenomeArray holds:" + genomeArray[0] + genomeArray[1]);
+            String[] finalGenomeArray = genomeArray[0].split(" ");
+            System.out.println(finalGenomeArray.length);
+            switch (finalGenomeArray.length)
+            {
+                case 1 :
+                    genomeDownListComp = finalGenomeArray[0];
+                    break;
+                case 2 :
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1];
+                    break;
+                case 3:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2];
+                    break;
+                case 4:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3];
+                    break;
+                case 5:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4];
+                    break;
+            }
+            if(!genomeList.contains(genomeDownListComp)) {
+                genomeList.add(genomeDownListComp);
             }
         });
         //Add the remove function for the download Queue
@@ -261,16 +284,11 @@ public class Main extends Application{
         downloadPane.setOnAction(arg0 -> {
             counter = 0;
             rootNode.getChildren().removeAll(downloadPane,update,updateText);
-            rootNode.getChildren().addAll(genomeView,genomes,add,down,remove,back,input,destination);
+            rootNode.getChildren().addAll(genomeView,genomes,add,down,remove,back,input,destination, downText);
             getSQLDesignation();
             for(String i : sqlName)
             {
-                if(!sqlStrain.get(counter).contains("")){
-                    availableGenomes.add(i + "\tstrain= " + sqlCode.get(counter));
-                } else
-                {
-                    availableGenomes.add(i + "\tstrain undefined");
-                }
+                availableGenomes.add(i + "\t" + sqlStrain.get(counter));
                 counter++;
             }
             Collections.sort(availableGenomes);
@@ -278,7 +296,7 @@ public class Main extends Application{
         //Back action will return the user to the main page, by adding and removing nodes from the root
         back.setOnAction(arg0 -> {
             // TODO Auto-generated method stub
-            rootNode.getChildren().removeAll(genomeView,genomes,add,down,remove,back,input,destination);
+            rootNode.getChildren().removeAll(genomeView,genomes,add,down,remove,back,input,destination,downText);
             rootNode.getChildren().addAll(downloadPane,update,updateText);
 
         });
@@ -311,23 +329,31 @@ public class Main extends Application{
             else containsQuote = false;
             sqlSearch(input.getText());
             availableGenomes.clear();
-            for(String i : sqlName)
-            {
-                availableGenomes.add(i);
-
-            }
-            Collections.sort(availableGenomes);
+            counter = 0;
+                for(String o : sqlName)
+                {
+                    availableGenomes.add(o + "\t" + sqlStrain.get(counter));
+                    counter++;
+                }
+                Collections.sort(availableGenomes);
         });
         //Add the download action, wherein the FTP Class is informed to Get the genomes in the download queue
         down.setOnAction(ae -> {
             // TODO Auto-generated method stub
             downGenomes();
+            downText.setText("Download Progress: \n Download Completed");
         });
         //The destination box will most likely be replaced the something like a JFileChooser to select a directory location instead of typing it in
         //The current function is to tell the FTP Class where to download the genomes to
         destination.setOnAction(arg0 -> {
             // TODO Auto-generated method stub
-            directory = destination.getText();
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("JavaFX Projects");
+            File defaultDirectory = new File(System.getProperty("user.dir"));
+            chooser.setInitialDirectory(defaultDirectory);
+            File selectedDirectory = chooser.showDialog(myStage);
+            System.out.println(selectedDirectory.toString());
+            downDir = selectedDirectory.toString();
             down.setDisable(false);
         });
     }
