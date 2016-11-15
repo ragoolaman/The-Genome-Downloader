@@ -28,8 +28,8 @@ public class Main extends Application{
     private List<String> sqlCode = new ArrayList<>();
     private List<String> sqlStrain = new ArrayList<>();
     private ObservableList<String> genomeList = FXCollections.observableArrayList();
-    private Label updateText, downText;
-    private Button downloadPane,update;
+    private Label downText;
+    private Button downloadPane;
     private Button add,down,remove,back, destination;
     private String availListSel;
     private String genomeListSel;
@@ -47,14 +47,12 @@ public class Main extends Application{
             Statement stmt = connection.createStatement();
             for(String i : genomeList)
             {
-                System.out.println(i);
                 rs = stmt.executeQuery("SELECT * FROM genbankfile WHERE designation LIKE '" + i + "'");
                 while(rs.next())
                 {
 
                     try {
                         FTP.FTPGet(rs.getString(1), rs.getString(3) + "_" + rs.getString(4).trim());
-                        System.out.println("Finished Downloading " + i);
                     } catch (IllegalStateException | IOException | FTPIllegalReplyException | FTPException
                             | FTPDataTransferException | FTPAbortedException e) {
                         e.printStackTrace();
@@ -83,7 +81,6 @@ public class Main extends Application{
             while(rs.next())
             {
                 sqlName.add((rs.getString(1)));
-                //System.out.println(rs.getString(1));
                 sqlStrain.add(rs.getString(2));
                 sqlCode.add(rs.getString(3) + "_" + rs.getString(4));
             }
@@ -96,7 +93,6 @@ public class Main extends Application{
     }
     private void sqlSearch(String genome)
     {
-        System.out.println(genome);
         sqlName.clear();
         sqlStrain.clear();
         sqlCode.clear();
@@ -107,10 +103,8 @@ public class Main extends Application{
             Statement stmt = connection.createStatement();
             if(containsQuote)
             {
-                System.out.println("has quote");
                 rs = stmt.executeQuery("SELECT * FROM genbankfile WHERE designation LIKE'" + genome.replaceAll("\"", "") + "%'");
             } else {
-                System.out.println("has no quote");
                 rs = stmt.executeQuery("SELECT * FROM genbankfile WHERE designation LIKE'%" + genome + "%'");
             }
             while(rs.next())
@@ -126,65 +120,6 @@ public class Main extends Application{
             throw new IllegalStateException("Cannot connect the database!", e);
         }
     }
-    /*private static boolean populateSQL(String aSQLScriptFilePath) throws IOException,SQLException {
-        //Thread sqlProc = new Thread();
-        System.out.println("    Establishing connection with localhost");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://isratosh.net:3306/genbank?useSSL=false","scifair","johnsux");
-        System.out.println("    Creating blank statement");
-        Statement stmt = connection.createStatement();
-        boolean isScriptExecuted = false;
-        try {
-            System.out.println("    Starting BufferedReader");
-            BufferedReader in = new BufferedReader(new FileReader(aSQLScriptFilePath));
-            String str;
-            System.out.println("    Starting StringBuilder");
-            StringBuilder sb = new StringBuilder();
-            System.out.println("    Starting population while loop");
-            while ((str = in.readLine()) != null) sb.append(str);
-            in.close();
-            stmt.executeUpdate("DROP TABLE genbankfile");
-            stmt.executeUpdate("CREATE TABLE genbankfile (designation TEXT, strain TEXT, gcf TEXT, asm TEXT, id MEDIUMINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id))");
-            stmt.executeUpdate(sb.toString());
-            isScriptExecuted = true;
-        } catch (Exception e) {
-            System.err.println("Failed to Execute" + aSQLScriptFilePath +". The error is"+ e.getMessage());
-        }
-        System.out.println("    Finished populatSQL");
-        return isScriptExecuted;
-    }*/
-
-    /*private static void processDataFile() throws IOException
-    {
-        System.out.println("    Initializing FileReader input for genbankRaw.txt");
-        FileReader input = new FileReader("C:\\Users\\John\\Documents\\genbankRaw.txt");
-        System.out.println("    Initializing BufferedReader bufRead for genbankRaw.txt");
-        BufferedReader bufRead = new BufferedReader(input);
-        String myLine;
-        System.out.println("    Initializing PrintWriter write for genbankFile.txt");
-        PrintWriter write = new PrintWriter("C:\\Users\\John\\Documents\\genbankFile.txt", "UTF-8");
-        System.out.println("    Initializing FilReader proc for genbankFile.txt");
-        FileReader proc = new FileReader("C:\\Users\\John\\Documents\\genbankFile.txt");
-        BufferedReader procRead = new BufferedReader(proc);
-        System.out.println("    Beginning print while loop");
-        while ( (myLine = bufRead.readLine()) != null) {
-            String[] array1 = myLine.split("\n");
-            // check to make sure you have valid data
-            for (String i : array1) {
-                String[] array2 = i.split("\t");
-                if (!array2[0].contains("#")) {
-                    if (array2[17].contains("na")) {
-                        write.println(array2[7] + "\t" + array2[8] + "\t" + array2[0] + "\t" + array2[15]);
-                    } else {
-                        write.println(array2[7] + "\t" + array2[8] + "\t" + array2[17] + "\t" + array2[15]);
-                    }
-                }
-            }
-        }
-        System.out.println("    Exiting the print while loop");
-        write.close();
-        proc.close();
-        procRead.close();
-    }*/
 
     public static void main(String[] args) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException, SQLException
     {
@@ -213,10 +148,6 @@ public class Main extends Application{
         back = new Button("<-Back To Menu");
             back.setTranslateY(-320);
             back.setTranslateX(-863);
-        //update = new Button("Update Database");
-        //Create label, and set text
-        //updateText = new Label("Update Progress:");
-        //Add the texfields, set their prompt text, and translate them into position
         input = new TextField();
             input.setPromptText("Search for Genome by Name");
             input.setPrefColumnCount(15);
@@ -244,11 +175,8 @@ public class Main extends Application{
 
         //Add action listener to add the selected genome to the download queue
         add.setOnAction(ae -> {
-            //System.out.println("AvailListSel is" + availListSel);
             String[] genomeArray = availListSel.split("\t");
-            //System.out.println("GenomeArray holds:" + genomeArray[0] + genomeArray[1]);
             String[] finalGenomeArray = genomeArray[0].split(" ");
-            System.out.println(finalGenomeArray.length);
             switch (finalGenomeArray.length)
             {
                 case 1 :
@@ -301,28 +229,7 @@ public class Main extends Application{
 
         });
         //Update button runs FTP.Update(), and attempts to give the user updates on progress. No luck as of yet... Should try Threading next...
-        /*update.setOnAction(arg0 -> {
-                    updateText.setText("Update in progress...\nBeginning file download...");
-                    try {
-                        FTP.FTPUpdate();
-                    } catch (IllegalStateException | IOException | FTPIllegalReplyException | FTPException
-                            | FTPDataTransferException | FTPAbortedException | FTPListParseException e) {
-                        e.printStackTrace();
-                    }
-                    updateText.setText("Update in progress...\nProcessing file...");
-                    try {
-                        processDataFile();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-                    updateText.setText("Update in progress...\nPopulating SQL Database...");
-                    try {
-                        populateSQL("C:\\Users\\John\\Documents\\sqlForJava.sql");
-                    } catch (IOException | SQLException e) {
-                        e.printStackTrace();
-                    }
-                    updateText.setText("Update Progress:\nUpdate Complete");
-        });*/
+
         //The input text field will detect wether the text contains a quotation mark, if it does, the input is taken literally, instead of take figuratively
         input.setOnAction(arg0 -> {
             if (input.getText().contains("\"")) containsQuote = true;
@@ -352,7 +259,6 @@ public class Main extends Application{
             File defaultDirectory = new File(System.getProperty("user.dir"));
             chooser.setInitialDirectory(defaultDirectory);
             File selectedDirectory = chooser.showDialog(myStage);
-            System.out.println(selectedDirectory.toString());
             downDir = selectedDirectory.toString();
             down.setDisable(false);
         });

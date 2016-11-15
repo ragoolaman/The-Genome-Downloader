@@ -17,20 +17,9 @@ import it.sauronsoftware.ftp4j.FTPClient;
 import it.sauronsoftware.ftp4j.FTPDataTransferException;
 import it.sauronsoftware.ftp4j.FTPException;
 import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
-import it.sauronsoftware.ftp4j.FTPListParseException;
 
 public class FTP {
 
-    public static void FTPUpdate() throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException
-    {
-        System.out.println("    Initializing connection");
-        FTPClient client = new FTPClient();
-        client.connect("ftp.ncbi.nlm.nih.gov");
-        client.login("anonymous", "abc123");
-        client.changeDirectory("/genomes/genbank/");
-        System.out.println("    Starting Download");
-        client.download("assembly_summary_genbank.txt", new java.io.File("C:\\Users\\John\\Documents\\genbankRaw.txt"));
-    }
     public static void FTPGet(String genomeName, String genomeCode) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException
     {
         genomeCode = genomeCode.replaceAll("#","_");
@@ -42,9 +31,7 @@ public class FTP {
         boolean newFolder = (new File(dir + "\\" + genomeName).mkdir());
         if(!newFolder)
         {
-            System.out.println("File creation failure.");
         }
-        System.out.println("entering download phase");
         client.download(genomeCode + "_assembly_report.txt", new java.io.File(dir + "\\" + genomeName + "\\" + "Assembly Report.txt"));
         client.download(genomeCode + "_assembly_stats.txt", new java.io.File(dir + "\\" + genomeName + "\\" + "Assembly Stats.txt"));
         client.download(genomeCode + "_genomic.fna.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Genomic FNA.gz"));
@@ -69,7 +56,6 @@ public class FTP {
                 toDelete.delete();
             }
             catch(IOException e){
-                System.out.println("Exception has been thrown" + e);
             }
         }
     }
