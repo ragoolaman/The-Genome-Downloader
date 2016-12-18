@@ -58,7 +58,7 @@ public class FTP {
                 gzipInputStream = new GZIPInputStream(new FileInputStream(dir + "\\" + genomeName + "\\" + i + ".gz"));
                 String outFilename = i + ".txt";
                 OutputStream out = new FileOutputStream(dir + "\\" + genomeName + "\\" + outFilename);
-                byte[] buf = new byte[1024];  //size can be changed according to programmer's need.
+                byte[] buf = new byte[1024];
                 int len;
                 while ((len = gzipInputStream.read(buf)) > 0) {
                     out.write(buf, 0, len);

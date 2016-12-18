@@ -39,9 +39,9 @@ public class Main extends Application{
 
     private void downGenomes() {
         //Declare location for JDBC Drivers, sql username and sql password
-        String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
-        String username = "java";
-        String password = "password";
+        String url = "jdbc:mysql://isratosh.net:3306/genbank?useSSL=false";
+        String username = "scifair";
+        String password = "johnsux";
         //Establish the connection to the SQL Database
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
             Statement stmt = connection.createStatement();
@@ -74,9 +74,9 @@ public class Main extends Application{
         sqlName.clear();
         sqlCode.clear();
         sqlStrain.clear();
-        String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
-        String username = "java";
-        String password = "password";
+        String url = "jdbc:mysql://isratosh.net:3306/genbank?useSSL=false";
+        String username = "scifair";
+        String password = "johnsux";
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
             Statement stmt = connection.createStatement();
             rs = stmt.executeQuery("SELECT * FROM genbankfile");
@@ -100,9 +100,9 @@ public class Main extends Application{
         sqlName.clear();
         sqlStrain.clear();
         sqlCode.clear();
-        String url = "jdbc:mysql://localhost:3306/javabase?useSSL=false";
-        String username = "java";
-        String password = "password";
+        String url = "jdbc:mysql://isratosh.net:3306/genbank?useSSL=false";
+        String username = "scifair";
+        String password = "johnsux";
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
             Statement stmt = connection.createStatement();
             if(containsQuote)
@@ -126,10 +126,10 @@ public class Main extends Application{
             throw new IllegalStateException("Cannot connect the database!", e);
         }
     }
-    private static boolean populateSQL(String aSQLScriptFilePath) throws IOException,SQLException {
+    /*private static boolean populateSQL(String aSQLScriptFilePath) throws IOException,SQLException {
         //Thread sqlProc = new Thread();
         System.out.println("    Establishing connection with localhost");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/javabase?useSSL=false","java","password");
+        Connection connection = DriverManager.getConnection("jdbc:mysql://isratosh.net:3306/genbank?useSSL=false","scifair","johnsux");
         System.out.println("    Creating blank statement");
         Statement stmt = connection.createStatement();
         boolean isScriptExecuted = false;
@@ -151,9 +151,9 @@ public class Main extends Application{
         }
         System.out.println("    Finished populatSQL");
         return isScriptExecuted;
-    }
+    }*/
 
-    private static void processDataFile() throws IOException
+    /*private static void processDataFile() throws IOException
     {
         System.out.println("    Initializing FileReader input for genbankRaw.txt");
         FileReader input = new FileReader("C:\\Users\\John\\Documents\\genbankRaw.txt");
@@ -184,7 +184,7 @@ public class Main extends Application{
         write.close();
         proc.close();
         procRead.close();
-    }
+    }*/
 
     public static void main(String[] args) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException, SQLException
     {
@@ -213,9 +213,9 @@ public class Main extends Application{
         back = new Button("<-Back To Menu");
             back.setTranslateY(-320);
             back.setTranslateX(-863);
-        update = new Button("Update Database");
+        //update = new Button("Update Database");
         //Create label, and set text
-        updateText = new Label("Update Progress:");
+        //updateText = new Label("Update Progress:");
         //Add the texfields, set their prompt text, and translate them into position
         input = new TextField();
             input.setPromptText("Search for Genome by Name");
@@ -277,13 +277,13 @@ public class Main extends Application{
             genomeList.remove(genomeListSel);
         });
         //Add the initial nodes to the root, show the rootNode
-        rootNode.getChildren().addAll(downloadPane,update,updateText);
+        rootNode.getChildren().addAll(downloadPane/*,update,updateText*/);
         myStage.show();
 
         //This will initialize the download pane, and display all genomes on the left most panel
         downloadPane.setOnAction(arg0 -> {
             counter = 0;
-            rootNode.getChildren().removeAll(downloadPane,update,updateText);
+            rootNode.getChildren().removeAll(downloadPane/*,update,updateText*/);
             rootNode.getChildren().addAll(genomeView,genomes,add,down,remove,back,input,destination, downText);
             getSQLDesignation();
             for(String i : sqlName)
@@ -297,11 +297,11 @@ public class Main extends Application{
         back.setOnAction(arg0 -> {
             // TODO Auto-generated method stub
             rootNode.getChildren().removeAll(genomeView,genomes,add,down,remove,back,input,destination,downText);
-            rootNode.getChildren().addAll(downloadPane,update,updateText);
+            rootNode.getChildren().addAll(downloadPane/*,update,updateText*/);
 
         });
         //Update button runs FTP.Update(), and attempts to give the user updates on progress. No luck as of yet... Should try Threading next...
-        update.setOnAction(arg0 -> {
+        /*update.setOnAction(arg0 -> {
                     updateText.setText("Update in progress...\nBeginning file download...");
                     try {
                         FTP.FTPUpdate();
@@ -322,7 +322,7 @@ public class Main extends Application{
                         e.printStackTrace();
                     }
                     updateText.setText("Update Progress:\nUpdate Complete");
-        });
+        });*/
         //The input text field will detect wether the text contains a quotation mark, if it does, the input is taken literally, instead of take figuratively
         input.setOnAction(arg0 -> {
             if (input.getText().contains("\"")) containsQuote = true;
