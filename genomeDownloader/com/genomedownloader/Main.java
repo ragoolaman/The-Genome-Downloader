@@ -37,9 +37,10 @@ public class Main extends Application{
     private boolean containsQuote;
     private int counter;
     private double counter1,genomeLists;
+    private boolean gcf = true;
+    private String genomeCode;
 
     private void FTPGet(String genomeName, String genomeLink) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException {
-
         String[] proclink = genomeLink.split("//");
         String finallink = proclink[1];
         String[] procfinallink = finallink.split("/");
@@ -59,6 +60,7 @@ public class Main extends Application{
         catch (FTPIllegalReplyException|FTPException e)
         {
             test = "/" + procfinallink[1] + "/" + procfinallink[2] + "/" + procfinallink[3] + "/" + procfinallink[4] + "/" + procfinallink[5] + "/" + procfinallink[6] + "/" + procfinallink[7];
+            gcf = false;
             client.changeDirectory(test);
         }
         String folderNew;
@@ -69,7 +71,13 @@ public class Main extends Application{
         bar.setProgress(0.0);
         ind.setProgress(0.0);
         boolean newFolder = (new File(dir + "\\" + folderNew).mkdir());
-        String genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+        if(gcf)
+        {
+            genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+        } else
+            {
+                genomeCode = "GCA_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+            }
         genomeCode.trim();
         if (!newFolder) {
         }
@@ -85,7 +93,10 @@ public class Main extends Application{
         client.download(genomeCode + "_genomic.gbff.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Genomic GBFF.gz"));
         bar.setProgress(0.8);
         ind.setProgress(0.8);
-        client.download(genomeCode + "_protein.faa.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Protein FAA.gz"));
+        if (gcf)
+        {
+            client.download(genomeCode + "_protein.faa.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Protein FAA.gz"));
+        }
         bar.setProgress(1.0);
         ind.setProgress(1.0);
 
@@ -309,7 +320,8 @@ public class Main extends Application{
                     try (Connection connection = DriverManager.getConnection(url, username, password)) {
                         Statement stmt = connection.createStatement();
                         for (String i : genomeList) {
-                            rs = stmt.executeQuery("SELECT * FROM genbankFile WHERE name LIKE '" + i + "'");
+                            String code = sqlCode.get(genomeList.indexOf(i));
+                            rs = stmt.executeQuery("SELECT * FROM genbankFile WHERE name LIKE '" + i + "' AND link LIKE '" + code + "'");
                             while (rs.next())
                                 try {
                                     Platform.runLater(() -> {
@@ -333,6 +345,7 @@ public class Main extends Application{
                         stmt.close();
                         rs.close();
                         Platform.runLater(() -> downLabel.setText(""));
+                        Platform.runLater(() -> genomeList.clear());
                     } catch (SQLException e) {
                         throw new IllegalStateException("Cannot connect the database!", e);
                     }
@@ -341,6 +354,7 @@ public class Main extends Application{
             };
             Thread th = new Thread(task);
             th.start();
+            ;
         });
         //The current function is to tell the FTP method where to download the genomes to
         destination.setOnAction(arg0 -> {
