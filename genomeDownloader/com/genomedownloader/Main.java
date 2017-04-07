@@ -21,10 +21,11 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 @SuppressWarnings("ALL")
+
 public class Main extends Application{
 
     //Initalize necessary variables
-    private List<String> sqlName = new ArrayList<>(), sqlCode = new ArrayList<>(), sqlStrain = new ArrayList<>();
+    private List<String> sqlName = new ArrayList<>(), sqlCode = new ArrayList<>(), sqlStrain = new ArrayList<>(), finalSqlCode = new ArrayList<>();
     private ObservableList<String> genomeList = FXCollections.observableArrayList();
     private ProgressBar bar;
     private ProgressIndicator ind;
@@ -41,6 +42,7 @@ public class Main extends Application{
     private String genomeCode;
 
     private void FTPGet(String genomeName, String genomeLink) throws IllegalStateException, IOException, FTPIllegalReplyException, FTPException, FTPDataTransferException, FTPAbortedException, FTPListParseException {
+        gcf = true;
         String[] proclink = genomeLink.split("//");
         String finallink = proclink[1];
         String[] procfinallink = finallink.split("/");
@@ -52,7 +54,6 @@ public class Main extends Application{
         client.login("anonymous", "abc123");
         String[] thisbetterwork = procfinallink[7].split("_");
         String test = "/" + procfinallink[1] + "/" + procfinallink[2] + "/" + "GCF"/*procfinallink[3]*/ + "/" + procfinallink[4] + "/" + procfinallink[5] + "/" + procfinallink[6] + "/GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
-        client.changeDirectory(test);
         try
         {
             client.changeDirectory(test);
@@ -71,13 +72,52 @@ public class Main extends Application{
         bar.setProgress(0.0);
         ind.setProgress(0.0);
         boolean newFolder = (new File(dir + "\\" + folderNew).mkdir());
-        if(gcf)
+        switch (thisbetterwork.length)
         {
-            genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
-        } else
-            {
-                genomeCode = "GCA_" + thisbetterwork[1] + "_" + thisbetterwork[2];
-            }
+            case 1:
+
+                break;
+            case 2:
+
+                if(gcf)
+                {
+                    genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+                } else
+                {
+                    genomeCode = "GCA_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+                }
+                break;
+            case 3:
+
+                if(gcf)
+                {
+                    genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+                } else
+                {
+                    genomeCode = "GCA_" + thisbetterwork[1] + "_" + thisbetterwork[2];
+                }
+                break;
+            case 4:
+                if(gcf)
+                {
+                    genomeCode = "GCF_" + thisbetterwork[1] + "_" + thisbetterwork[2] + "_" + thisbetterwork[3];
+                } else
+                {
+                    genomeCode = "GCA_" + thisbetterwork[1] + "_" + thisbetterwork[2] + "_" + thisbetterwork[3];
+                }
+
+                break;
+            case 5:
+
+                break;
+            case 6:
+
+                break;
+            default:
+                System.out.println("messed up my program! HOW DARETH YE... FATAL ERROR REDOWNLOAD FROM GITHUB OR WHEREVER I PUT THIS");
+                break;
+        }
+
         genomeCode.trim();
         if (!newFolder) {
         }
@@ -93,10 +133,11 @@ public class Main extends Application{
         client.download(genomeCode + "_genomic.gbff.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Genomic GBFF.gz"));
         bar.setProgress(0.8);
         ind.setProgress(0.8);
-        if (gcf)
+        try
         {
             client.download(genomeCode + "_protein.faa.gz", new java.io.File(dir + "\\" + genomeName + "\\" + "Protein FAA.gz"));
-        }
+        } catch (IllegalStateException|IOException|FTPIllegalReplyException|FTPException|FTPDataTransferException|FTPAbortedException u)
+        {}
         bar.setProgress(1.0);
         ind.setProgress(1.0);
 
@@ -261,9 +302,33 @@ public class Main extends Application{
                 case 5:
                     genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4];
                     break;
+                case 6:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4] + " " + finalGenomeArray[5];
+                    break;
+                case 7:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4] + " " + finalGenomeArray[5] + " " + finalGenomeArray[6];
+                    break;
+                case 8:
+                    genomeDownListComp = finalGenomeArray[0] + " " + finalGenomeArray[1] + " " + finalGenomeArray[2] + " " + finalGenomeArray[3] + " " + finalGenomeArray[4] + " " + finalGenomeArray[5] + " " + finalGenomeArray[6] + " " + finalGenomeArray[7];
+                    break;
             }
             if(!genomeList.contains(genomeDownListComp)) {
                 genomeList.add(genomeDownListComp);
+            }
+            String url = "jdbc:mysql://216.105.170.143:3306/genbank?useSSL=false";
+            String username = "java";
+            String password = "abc123";
+            //Establish the connection to the SQL Database
+            try (Connection connection = DriverManager.getConnection(url, username, password)) {
+                Statement stmt = connection.createStatement();
+                rs = stmt.executeQuery("SELECT * FROM genbankFile WHERE name LIKE '" + genomeDownListComp + "' AND strain LIKE '" + genomeArray[1] + "'");
+                while(rs.next())
+                {
+                    finalSqlCode.add(rs.getString(3));
+                }
+            } catch (SQLException e)
+            {
+                e.printStackTrace();
             }
         });
         //Add the remove function for the download Queue
@@ -320,7 +385,7 @@ public class Main extends Application{
                     try (Connection connection = DriverManager.getConnection(url, username, password)) {
                         Statement stmt = connection.createStatement();
                         for (String i : genomeList) {
-                            String code = sqlCode.get(genomeList.indexOf(i));
+                            String code = finalSqlCode.get(genomeList.indexOf(i));
                             rs = stmt.executeQuery("SELECT * FROM genbankFile WHERE name LIKE '" + i + "' AND link LIKE '" + code + "'");
                             while (rs.next())
                                 try {
@@ -331,6 +396,7 @@ public class Main extends Application{
                                             e.printStackTrace();
                                         }
                                     });
+
                                     FTPGet(rs.getString(1), rs.getString(3).trim());/*).start();*/
                                     counter1++;
                                     genomeLists = genomeList.size();
